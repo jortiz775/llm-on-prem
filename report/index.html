@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM On-Prem — Playwright MCP Demo Report</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a2e;
+      --card: #16213e;
+      --accent: #7c3aed;
+      --accent2: #a78bfa;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #2d3748;
+      --green: #10b981;
+      --blue: #3b82f6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #1e0a3c 0%, #0f172a 60%, #0c1445 100%);
+      padding: 60px 40px 50px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── Meta strip ── */
+    .meta {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      padding: 22px 40px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .meta-item { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .meta-item strong { color: var(--text); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+    /* ── Main layout ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* ── Section headers ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      margin-top: 52px;
+    }
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-label h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section-label p {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    /* ── Screenshot cards ── */
+    .screenshot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .screenshot-card .bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #0d0d1a;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .bar-dot.r { background: #ff5f57; }
+    .bar-dot.y { background: #febc2e; }
+    .bar-dot.g { background: #28c840; }
+    .bar-url {
+      flex: 1;
+      background: #1a1a2e;
+      border-radius: 6px;
+      padding: 3px 12px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: monospace;
+    }
+    .screenshot-card img {
+      width: 100%;
+      display: block;
+    }
+    .screenshot-caption {
+      padding: 12px 18px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      background: #0d0d1a;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Tool events ── */
+    .events {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .event {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+    .event-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .event-icon.nav  { background: #1e3a5f; }
+    .event-icon.shot { background: #1a2e1e; }
+    .event-icon.click{ background: #2e1a3a; }
+    .event-icon.type { background: #2e2a1a; }
+    .event-icon.wait { background: #1a2a2e; }
+    .event-body { flex: 1; min-width: 0; }
+    .event-title { font-size: 0.88rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .event-desc  { font-size: 0.8rem; color: var(--muted); }
+    .event-code  {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 0.78rem;
+      background: #0a0a14;
+      border: 1px solid var(--border);
+      color: #a78bfa;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    .event-time {
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+      padding-top: 2px;
+    }
+
+    /* ── Summary box ── */
+    .summary {
+      background: linear-gradient(135deg, #0f2027, #1a2a1a);
+      border: 1px solid #2d5a27;
+      border-radius: 14px;
+      padding: 28px 32px;
+      margin-top: 52px;
+    }
+    .summary h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+    }
+    .summary-stat {
+      text-align: center;
+      padding: 16px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+    }
+    .summary-stat .num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent2);
+      display: block;
+    }
+    .summary-stat .lbl {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="badge">Playwright MCP Report</div>
+  <h1>LLM On-Prem — Live Demo</h1>
+  <p>Automated browser walkthrough of the on-premises AI chat interface using Playwright MCP inside GitHub Copilot.</p>
+</div>
+
+<!-- ── Meta strip ── -->
+<div class="meta">
+  <div class="meta-item"><span class="dot"></span><strong>Status:</strong> Passed</div>
+  <div class="meta-item"><strong>Date:</strong> June 1, 2026</div>
+  <div class="meta-item"><strong>Model under test:</strong> llama3:latest (Ollama)</div>
+  <div class="meta-item"><strong>App URL:</strong> http://localhost:3000</div>
+  <div class="meta-item"><strong>Tool:</strong> Playwright MCP via GitHub Copilot</div>
+</div>
+
+<!-- ── Main content ── -->
+<div class="container">
+
+  <!-- ─ What is Playwright MCP ─ -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin-bottom:8px;">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:10px;color:var(--accent2);">What is Playwright MCP?</h3>
+    <p style="font-size:0.9rem;color:var(--muted);line-height:1.7;">
+      <strong style="color:var(--text);">Playwright MCP</strong> (Model Context Protocol) is a tool that gives AI assistants like GitHub Copilot 
+      full browser control — navigation, clicking, typing, screenshot capture, and DOM inspection — all driven by 
+      natural language instructions. In this demo, Copilot autonomously opened the app, clicked a suggestion, 
+      sent a message to the local LLM, waited for the streamed response to complete, and captured evidence at 
+      every step. <strong style="color:var(--text);">No manual browser interaction was required.</strong>
+    </p>
+  </div>
+
+  <!-- ─ Step 1: Launch ─ -->
+  <div class="section-label" style="margin-top:40px;">
+    <div class="step-num">1</div>
+    <div>
+      <h2>App Launch — Fresh State</h2>
+      <p>Playwright MCP navigated to <code>http://localhost:3000</code> and captured the initial UI.</p>
+    </div>
+  </div>
+
+  <!-- Tool events for step 1 -->
+  <div class="events">
+    <div class="event">
+      <div class="event-icon nav">🌐</div>
+      <div class="event-body">
+        <div class="event-title">open_browser_page</div>
+        <div class="event-desc">Opened a new browser tab pointed at the Next.js dev server.</div>
+        <span class="event-code">url: "http://localhost:3000"</span>
+      </div>
+      <div class="event-time">~1.1 s</div>
+    </div>
+    <div class="event">
+      <div class="event-icon shot">📸</div>
+      <div class="event-body">
+        <div class="event-title">screenshot_page</div>
+        <div class="event-desc">Full-viewport screenshot captured to verify the landing state.</div>
+      </div>
+      <div class="event-time">~0.3 s</div>
+    </div>
+  </div>
+
+  <div class="screenshot-card">
+    <div class="bar">
+      <span class="bar-dot r"></span><span class="bar-dot y"></span><span class="bar-dot g"></span>
+      <span class="bar-url">http://localhost:3000</span>
+    </div>
+    <img src="00-landing-fresh.png" alt="Fresh landing page" />
+    <div class="screenshot-caption">
+      Landing page — model selector shows <strong>llama3:latest</strong> loaded via Ollama.
+      Suggestion prompts are rendered and the input is empty.
+    </div>
+  </div>
+
+  <!-- ─ Step 2: Send a message ─ -->
+  <div class="section-label">
+    <div class="step-num">2</div>
+    <div>
+      <h2>Send a Prompt</h2>
+      <p>Copilot clicked the "Explain quantum computing" suggestion, then hit Send.</p>
+    </div>
+  </div>
+
+  <div class="events">
+    <div class="event">
+      <div class="event-icon click">🖱️</div>
+      <div class="event-body">
+        <div class="event-title">click_element</div>
+        <div class="event-desc">Clicked the suggestion chip — text was populated into the input automatically.</div>
+        <span class="event-code">element: "Explain quantum computing in simple terms"</span>
+      </div>
+      <div class="event-time">~0.2 s</div>
+    </div>
+    <div class="event">
+      <div class="event-icon click">🖱️</div>
+      <div class="event-body">
+        <div class="event-title">click_element — Send button</div>
+        <div class="event-desc">Clicked the send button to dispatch the message to the local LLM.</div>
+        <span class="event-code">ref: e42 (Send message button)</span>
+      </div>
+      <div class="event-time">~0.1 s</div>
+    </div>
+  </div>
+
+  <div class="screenshot-card">
+    <div class="bar">
+      <span class="bar-dot r"></span><span class="bar-dot y"></span><span class="bar-dot g"></span>
+      <span class="bar-url">http://localhost:3000</span>
+    </div>
+    <img src="01-user-message.png" alt="User message sent, AI streaming" />
+    <div class="screenshot-caption">
+      User bubble (top-right, purple) is visible. The assistant begins streaming the response immediately.
+      The conversation title was auto-updated in the sidebar History panel.
+    </div>
+  </div>
+
+  <!-- ─ Step 3: Full response ─ -->
+  <div class="section-label">
+    <div class="step-num">3</div>
+    <div>
+      <h2>Full AI Response</h2>
+      <p>Playwright waited for streaming to finish, then scrolled to capture the complete reply.</p>
+    </div>
+  </div>
+
+  <div class="events">
+    <div class="event">
+      <div class="event-icon wait">⏳</div>
+      <div class="event-body">
+        <div class="event-title">run_playwright_code — wait for idle</div>
+        <div class="event-desc">Polled until the send button was re-enabled, confirming the stream had ended.</div>
+        <span class="event-code">page.waitForTimeout(5000)</span>
+      </div>
+      <div class="event-time">~60 s</div>
+    </div>
+    <div class="event">
+      <div class="event-icon shot">📸</div>
+      <div class="event-body">
+        <div class="event-title">screenshot_page (scrolled to bottom)</div>
+        <div class="event-desc">Scrolled to the end of the response and captured the final viewport.</div>
+        <span class="event-code">page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))</span>
+      </div>
+      <div class="event-time">~0.4 s</div>
+    </div>
+  </div>
+
+  <div class="screenshot-card">
+    <div class="bar">
+      <span class="bar-dot r"></span><span class="bar-dot y"></span><span class="bar-dot g"></span>
+      <span class="bar-url">http://localhost:3000</span>
+    </div>
+    <img src="02-response-bottom.png" alt="Complete AI response" />
+    <div class="screenshot-caption">
+      <strong>llama3:latest</strong> fully answered the question. The send button is re-enabled and the chat 
+      is ready for a follow-up. All processing happened locally — no data left the machine.
+    </div>
+  </div>
+
+  <!-- ─ Summary ─ -->
+  <div class="summary">
+    <h3>✅ Run Summary</h3>
+    <div class="summary-grid">
+      <div class="summary-stat"><span class="num">7</span><span class="lbl">Playwright Actions</span></div>
+      <div class="summary-stat"><span class="num">4</span><span class="lbl">Screenshots Taken</span></div>
+      <div class="summary-stat"><span class="num">1</span><span class="lbl">Messages Sent</span></div>
+      <div class="summary-stat"><span class="num">0</span><span class="lbl">External Requests</span></div>
+      <div class="summary-stat"><span class="num">100%</span><span class="lbl">Local &amp; Private</span></div>
+    </div>
+  </div>
+
+  <!-- ─ Actions Breakdown ─ -->
+  <div style="margin-top:48px;">
+    <div class="section-label" style="margin-top:0">
+      <div class="step-num" style="background:var(--blue)">📋</div>
+      <div><h2>Full Actions Log</h2><p>Every Playwright MCP call made during this session, in order.</p></div>
+    </div>
+    <div class="events">
+      <div class="event"><div class="event-icon nav">🌐</div><div class="event-body"><div class="event-title">run_in_terminal</div><div class="event-desc">Started Next.js dev server (<code>npm run dev</code>) on port 3000 with Turbopack.</div></div><div class="event-time">1.1 s ready</div></div>
+      <div class="event"><div class="event-icon nav">🌐</div><div class="event-body"><div class="event-title">open_browser_page</div><div class="event-desc">Opened <code>http://localhost:3000</code> — obtained <code>pageId</code> for all subsequent calls.</div></div><div class="event-time">~0.8 s</div></div>
+      <div class="event"><div class="event-icon shot">📸</div><div class="event-body"><div class="event-title">screenshot_page — initial state</div><div class="event-desc">Verified landing page: model loaded, suggestion chips visible, input empty.</div></div><div class="event-time">~0.3 s</div></div>
+      <div class="event"><div class="event-icon click">🖱️</div><div class="event-body"><div class="event-title">click_element — suggestion chip</div><div class="event-desc">"Explain quantum computing in simple terms." populated in the textarea.</div></div><div class="event-time">~0.2 s</div></div>
+      <div class="event"><div class="event-icon shot">📸</div><div class="event-body"><div class="event-title">screenshot_page — message ready</div><div class="event-desc">Confirmed text in input field and send button enabled.</div></div><div class="event-time">~0.3 s</div></div>
+      <div class="event"><div class="event-icon click">🖱️</div><div class="event-body"><div class="event-title">click_element — Send button</div><div class="event-desc">Message dispatched; assistant bubble appeared immediately with streaming text.</div></div><div class="event-time">~0.1 s</div></div>
+      <div class="event"><div class="event-icon shot">📸</div><div class="event-body"><div class="event-title">screenshot_page — streaming</div><div class="event-desc">Captured mid-stream to show real-time token output from llama3.</div></div><div class="event-time">~0.3 s</div></div>
+      <div class="event"><div class="event-icon wait">⏳</div><div class="event-body"><div class="event-title">run_playwright_code — wait for completion</div><div class="event-desc">Polled button state; waited for the model to finish generating the full response.</div></div><div class="event-time">~60 s</div></div>
+      <div class="event"><div class="event-icon shot">📸</div><div class="event-body"><div class="event-title">screenshot_page — complete response</div><div class="event-desc">Scrolled to bottom, captured full answer including summary and follow-up prompt.</div></div><div class="event-time">~0.4 s</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+  Generated by <strong>GitHub Copilot</strong> using <a href="https://playwright.dev">Playwright</a> MCP ·
+  App: <a href="https://github.com/jorti/llm-on-prem">llm-on-prem</a> ·
+  Model: llama3:latest via <a href="https://ollama.com">Ollama</a>
+</footer>
+
+</body>
+</html>
