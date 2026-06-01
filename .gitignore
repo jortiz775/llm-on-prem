@@ -1,0 +1,64 @@
+# ---- Python -------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ---- Environment / secrets ----------------------------------------
+# NEVER commit API keys, passwords, or tokens.
+.env
+.env.local
+.env.*.local
+
+# ---- Models & embeddings ------------------------------------------
+# Model weights are large binary files — store them outside the repo
+# or use Ollama's model library instead.
+models/
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# ---- Vector store data --------------------------------------------
+# ChromaDB persists its index to disk — exclude these generated files.
+chroma_db/
+vector_store/
+*.index
+
+# ---- Documents (client data) --------------------------------------
+# Raw input documents may contain sensitive information.
+data/documents/
+data/raw/
+
+# ---- Jupyter ------------------------------------------------------
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ---- Node ---------------------------------------------------------
+node_modules/
+
+# ---- Docker -------------------------------------------------------
+# Exclude any locally generated Docker volumes or overrides.
+docker-compose.override.yml
+
+# ---- OS -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- IDE ----------------------------------------------------------
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
